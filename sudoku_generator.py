@@ -197,37 +197,68 @@ class SudokuGenerator:
 	Parameters: None
 	Return: None
     '''
-    def remove_cells(self):
+def remove_cells(self): # Sagan
+	# This method removes the appropriate number of cells from the board.
+	# It does so by randomly generating (row, col) coordinates of the board and 
+	# setting the value to 0.
+	# Note: Be careful not to remove the same cell multiple times. 
+	# A cell can only be removed once. 
+	# This method should be called after generating the Sudoku solution.
+
         pass
 
 class Cell:
-    def __init__(self, value, row, col, screen):
+    def __init__(self, value, row, col, screen): # Sagan
+	# Constructor for the Cell class
         pass
 
-    def set_cell_value(self, value):
+    def set_cell_value(self, value): # Sagan
+	# Setter for this cell’s value
         pass
 
-    def set_sketched_value(self, value):
+    def set_sketched_value(self, value): # Sagan
+	# Setter for this cell’s sketched value
         pass
 
-    def draw(self):
+    def draw(self): # Sagan
+	# Draws this cell, along with the value inside it.
+	# If this cell has a nonzero value, that value is displayed.
+	# Otherwise, no value is displayed in the cell.
+	# The cell is outlined red if it is currently selected.
+
         pass
 
 class Board:
-    def __init__(self, width, height, screen, difficulty):
+    def __init__(self, width, height, screen, difficulty): # Sagan
+	# Constructor for the Board class.
+	# screen is a window from PyGame.
+	# difficulty is a variable to indicate if the user chose easy medium, or hard.
+	    
         pass
 
-    def draw(self):
+    def draw(self): # Sagan
+	# Draws an outline of the Sudoku grid, with bold lines to delineate the 3x3 boxes.
+	# Draws every cell on this board.
+
         pass
 
-    def select(self, row, col):
+    def select(self, row, col): # Sagan
+	# Marks the cell at (row, col) in the board as the current selected cell.
+	# Once a cell has been selected, the user can edit its value or sketched value.
+
         pass
 
-    def click(self, row, col):
+    def click(self, row, col): # Sagan
+	# If a tuple of (x,y) coordinates is within the displayed board, 
+	# this function returns a tuple of the (row, col) of the cell which was clicked. 
+	# Otherwise, this function returns None.
+	    
         pass
 
-    def clear(self):
-        pass
+    def clear(self): # Sagan
+	# Clears the value cell. 
+	# Note that the user can only remove the cell values and 
+	# sketched values that are filled by themselves.
 
     def sketch(self, value):
         pass
