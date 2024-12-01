@@ -1,8 +1,8 @@
 import pygame
 import random
+from copy import deepcopy
 from enum import Enum
 from difficulty import Difficulty
-
 
 """
 This was adapted from a GeeksforGeeks article "Program for Sudoku Generator" by Aarti_Rathi and Ankur Trisal
@@ -15,9 +15,12 @@ class Color(Enum):
     LIGHT_GREEN = (209, 255, 164)
     GREEN = (134, 196, 71)
     STEEL_BLUE = (99, 125, 142)
+    RED = (221, 21, 61)
 
 
 class SudokuGenerator:
+    full_board = None
+
     """
         create a sudoku board - initialize class variables and set up the 2D board
         This should initialize:
@@ -49,6 +52,10 @@ class SudokuGenerator:
 
     def get_board(self):
         return self.board
+
+    @classmethod
+    def get_full_board(cls):
+        return cls.full_board
 
     """
 	Displays the board to the console
@@ -232,6 +239,8 @@ class SudokuGenerator:
         # A cell can only be removed once.
         # This method should be called after generating the Sudoku solution.
 
+        SudokuGenerator.full_board = deepcopy(self.board)
+
         empty_cells = Difficulty.get_difficulty().value
 
         a = [0] * empty_cells + [1] * (self.row_length**2 - empty_cells)
@@ -247,6 +256,8 @@ class SudokuGenerator:
 class Cell:
     HIGHLIGHT_COLOR = Color.GREEN.value
     SELECTED_COLOR = Color.STEEL_BLUE.value
+    INVALID_COLOR = Color.RED.value
+
     screen = None
 
     @classmethod
@@ -265,8 +276,13 @@ class Cell:
         self.sketched_value = 0
         self.row = row
         self.col = col
+        self.invalid = False
+
+    def set_invalid(self):
+        self.invalid = True
 
     def set_value(self, value):
+        self.invalid = False
         self.value = value
 
     def set_sketched_value(self, value):
@@ -276,10 +292,14 @@ class Cell:
         cell_x = Cell.board_x + self.col * Cell.get_cell_size()
         cell_y = Cell.board_y + self.row * Cell.get_cell_size()
 
-        if selected or highlighted:
+        if self.invalid or selected or highlighted:
             pygame.draw.rect(
                 Cell.screen,
-                Cell.SELECTED_COLOR if selected else Cell.HIGHLIGHT_COLOR,
+                (
+                    Cell.INVALID_COLOR
+                    if self.invalid
+                    else Cell.SELECTED_COLOR if selected else Cell.HIGHLIGHT_COLOR
+                ),
                 pygame.Rect(
                     cell_x + 1, cell_y + 1, Cell.get_cell_size(), Cell.get_cell_size()
                 ),
@@ -315,7 +335,7 @@ class Board:
         self.font = font
         self.selected_cell = None
         self.highlighted_cell = None
-        self.update_board(width, height, screen, board)
+        self.update_board(width, height, board)
 
     def draw(self):
 
@@ -356,6 +376,12 @@ class Board:
     def select(self, row, col):
         self.selected_cell = self.cells[col][row]
 
+    def move_selected(self, disp):
+        curr_col = self.selected_cell.col
+        curr_row = self.selected_cell.row
+
+        self.selected_cell = self.cells[curr_row + disp[1]][curr_col + disp[0]]
+
     def get_cell(self, row, col):
         if (
             row > self.y + Cell.get_cell_size() * self.height
@@ -387,16 +413,12 @@ class Board:
 
     def click(self, row, col):
         curr = self.get_cell(row, col)
+
         if curr is None:
             self.selected_cell = None
             return
 
-        row_idx, col_idx = curr
-
-        if self.original_cells[col_idx][row_idx].value == 0:
-            self.select(row_idx, col_idx)
-        else:
-            self.selected_cell = None
+        self.select(*curr)
 
         return curr
 
@@ -416,13 +438,37 @@ class Board:
         if self.selected_cell is None:
             return
 
+        row = self.selected_cell.row
+        col = self.selected_cell.col
+
+        if self.original_cells[row][col].value != 0:
+            return 0
+
+        if value == 0:
+            self.selected_cell.set_value(0)
+
         self.selected_cell.set_sketched_value(value)
 
-    def place_number(self, value):
+    def place_number(self) -> int:
         if self.selected_cell is None:
-            return
+            return 0
+
+        value = self.selected_cell.sketched_value
+
+        row = self.selected_cell.row
+        col = self.selected_cell.col
+
+        if value == 0:
+            return 0
 
         self.selected_cell.set_value(value)
+
+        if SudokuGenerator.get_full_board()[row][col] == value:
+            if self.is_full():
+                return 1
+        else:
+            self.selected_cell.set_invalid()
+            return -1
 
     def reset_to_original(self):
         for i in range(self.height):
@@ -431,18 +477,18 @@ class Board:
                 self.cells[i][j].set_value(cell.value)
                 self.cells[i][j].set_sketched_value(cell.sketched_value)
 
-    def is_full(self):
-        if self.find_empty():
-            return False
-        return True
-
-    def update_board(self, width, height, screen, board):
+    def update_board(self, width, height, board):
         self.original_cells = [
             [Cell(board[i][j], i, j) for j in range(width)] for i in range(height)
         ]
         self.cells = [
             [Cell(board[i][j], i, j) for j in range(width)] for i in range(height)
         ]
+
+    def is_full(self):
+        if self.find_empty():
+            return False
+        return True
 
     def find_empty(self):
         for i in range(self.height):
@@ -451,9 +497,7 @@ class Board:
                     return (i, j)
         return False
 
-    def check_board(self):
-        if not self.is_full():
-            return False
+    def is_valid(self):
 
         # Row check
         for i in range(self.height):
@@ -483,21 +527,12 @@ class Board:
 
         return True
 
+    def check_board(self):
+        if not self.is_full():
+            return False
 
-class Button:
-    def __init__(self, rect: pygame.Rect):
-        self.rect = rect
-        self.hover = False
+        return self.is_valid()
 
-    def update_hover(self, x, y):
-        if self.rect.collidepoint(x, y):
-            if not self.hover:
-                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
-            self.hover = True
-        else:
-            if self.hover:
-                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
-            self.hover = False
 
 
 """
