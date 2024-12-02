@@ -198,12 +198,13 @@ def game_loop():
 
         pygame.display.update()
 
-    if state == 1:
-        menu_loop()
-    elif state == 2:
-        status_loop(False)
-    elif state == 3:
-        status_loop(True)
+    match state:
+        case 1:
+            menu_loop()
+        case 2:
+            status_loop(False)
+        case 3:
+            status_loop(True)
 
 
 def menu_loop():
