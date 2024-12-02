@@ -5,9 +5,7 @@ from enum import Enum
 from difficulty import Difficulty
 
 """
-This was adapted from a GeeksforGeeks article "Program for Sudoku Generator" by Aarti_Rathi and Ankur Trisal
-https://www.geeksforgeeks.org/program-sudoku-generator/
-
+    Enum to store color data in RGB format
 """
 
 
@@ -16,6 +14,11 @@ class Color(Enum):
     GREEN = (134, 196, 71)
     STEEL_BLUE = (99, 125, 142)
     RED = (221, 21, 61)
+
+
+"""
+    Used to generate a sudoku board
+"""
 
 
 class SudokuGenerator:
@@ -232,13 +235,6 @@ class SudokuGenerator:
     """
 
     def remove_cells(self):  # Sagan
-        # This method removes the appropriate number of cells from the board.
-        # It does so by randomly generating (row, col) coordinates of the board and
-        # setting the value to 0.
-        # Note: Be careful not to remove the same cell multiple times.
-        # A cell can only be removed once.
-        # This method should be called after generating the Sudoku solution.
-
         SudokuGenerator.full_board = deepcopy(self.board)
 
         empty_cells = Difficulty.get_difficulty().value
@@ -253,6 +249,11 @@ class SudokuGenerator:
                     self.board[i][j] = 0
 
 
+"""
+    Used for storing and displaying cells and their data respectively
+"""
+
+
 class Cell:
     HIGHLIGHT_COLOR = Color.GREEN.value
     SELECTED_COLOR = Color.STEEL_BLUE.value
@@ -262,6 +263,17 @@ class Cell:
 
     @classmethod
     def init(cls, x, y, screen, font):
+        """
+        Initialize class-level variables for the Cell class.
+
+        Parameters:
+        x - x-coordinate of the board's starting position
+        y - y-coordinate of the board's starting position
+        screen - Pygame screen surface to draw on
+        font - Pygame font to render text
+
+        Return: None
+        """
         cls.screen = screen
         cls.font = font
         cls.board_x = x
@@ -269,6 +281,12 @@ class Cell:
 
     @classmethod
     def get_cell_size(cls):
+        """
+        Calculate the size of each cell based on the screen height.
+
+        Parameters: None
+        Return: float representing the cell size
+        """
         return cls.screen.get_height() / 9.5
 
     def __init__(self, value, row, col):
@@ -279,16 +297,47 @@ class Cell:
         self.invalid = False
 
     def set_invalid(self):
+        """
+        Mark the current cell as invalid.
+
+        Parameters: None
+        Return: None
+        """
         self.invalid = True
 
     def set_value(self, value):
+        """
+        Set the value of the cell and reset its invalid status.
+
+        Parameters:
+        value - the number to set in the cell
+
+        Return: None
+        """
         self.invalid = False
         self.value = value
 
     def set_sketched_value(self, value):
+        """
+        Set a temporary sketched value for the cell.
+
+        Parameters:
+        value - the temporary number sketched in the cell
+
+        Return: None
+        """
         self.sketched_value = value
 
     def draw(self, selected=False, highlighted=False):
+        """
+        Draw the cell on the screen, with optional selection and highlight states.
+
+        Parameters:
+        selected - boolean indicating if the cell is currently selected
+        highlighted - boolean indicating if the cell is currently highlighted
+
+        Return: None
+        """
         cell_x = Cell.board_x + self.col * Cell.get_cell_size()
         cell_y = Cell.board_y + self.row * Cell.get_cell_size()
 
@@ -338,7 +387,12 @@ class Board:
         self.update_board(width, height, board)
 
     def draw(self):
+        """
+        Draw the Sudoku board grid and all cells.
 
+        Parameters: None
+        Return: None
+        """
         # draws row separating lines
         for i in range(1, self.height):
             pygame.draw.line(
@@ -374,15 +428,42 @@ class Board:
                 )
 
     def select(self, row, col):
+        """
+        Select a specific cell on the board.
+
+        Parameters:
+        row - row index of the cell to select
+        col - column index of the cell to select
+
+        Return: None
+        """
         self.selected_cell = self.cells[col][row]
 
     def move_selected(self, disp):
+        """
+        Move the currently selected cell by a specified displacement.
+
+        Parameters:
+        disp - tuple of (x_displacement, y_displacement)
+
+        Return: None
+        """
         curr_col = self.selected_cell.col
         curr_row = self.selected_cell.row
 
         self.selected_cell = self.cells[curr_row + disp[1]][curr_col + disp[0]]
 
     def get_cell(self, row, col):
+        """
+        Determine the cell at a specific screen coordinate.
+
+        Parameters:
+        row - y-coordinate on the screen
+        col - x-coordinate on the screen
+
+        Return:
+        Tuple of (row_index, column_index) or None if outside board
+        """
         if (
             row > self.y + Cell.get_cell_size() * self.height
             or col > self.x + Cell.get_cell_size() * self.width
@@ -397,6 +478,16 @@ class Board:
         return (row_idx, col_idx)
 
     def update_hover(self, row, col):
+        """
+        Update the highlighted cell based on mouse hover position.
+
+        Parameters:
+        row - y-coordinate of mouse hover
+        col - x-coordinate of mouse hover
+
+        Return:
+        Tuple of (row_index, column_index) or None if outside board
+        """
         curr = self.get_cell(row, col)
         if curr is None:
             self.highlighted_cell = None
@@ -412,6 +503,16 @@ class Board:
         return curr
 
     def click(self, row, col):
+        """
+        Handle a click event on the board.
+
+        Parameters:
+        row - y-coordinate of mouse click
+        col - x-coordinate of mouse click
+
+        Return:
+        Tuple of (row_index, column_index) or None if outside board
+        """
         curr = self.get_cell(row, col)
 
         if curr is None:
@@ -423,6 +524,12 @@ class Board:
         return curr
 
     def clear(self):
+        """
+        Clear the currently selected cell if it's not an original cell.
+
+        Parameters: None
+        Return: None
+        """
         if self.selected_cell is None:
             return
 
@@ -435,6 +542,15 @@ class Board:
         self.sketch(0)
 
     def sketch(self, value):
+        """
+        Sketch a temporary value in the currently selected cell.
+
+        Parameters:
+        value - the value to sketch in the cell
+
+        Return:
+        0 if sketching not possible, otherwise None
+        """
         if self.selected_cell is None:
             return
 
@@ -450,6 +566,15 @@ class Board:
         self.selected_cell.set_sketched_value(value)
 
     def place_number(self) -> int:
+        """
+        Place the sketched number in the currently selected cell.
+
+        Parameters: None
+        Return:
+        1 if the board is full and correct
+        -1 if the number is incorrect
+        0 if no number was sketched
+        """
         if self.selected_cell is None:
             return 0
 
@@ -471,6 +596,12 @@ class Board:
             return -1
 
     def reset_to_original(self):
+        """
+        Reset the board to its original state.
+
+        Parameters: None
+        Return: None
+        """
         for i in range(self.height):
             for j in range(self.width):
                 cell = self.original_cells[i][j]
@@ -478,6 +609,16 @@ class Board:
                 self.cells[i][j].set_sketched_value(cell.sketched_value)
 
     def update_board(self, width, height, board):
+        """
+        Update the board's cells with new board configuration.
+
+        Parameters:
+        width - number of columns in the board
+        height - number of rows in the board
+        board - 2D list representing the board configuration
+
+        Return: None
+        """
         self.original_cells = [
             [Cell(board[i][j], i, j) for j in range(width)] for i in range(height)
         ]
@@ -486,11 +627,26 @@ class Board:
         ]
 
     def is_full(self):
+        """
+        Check if the board is completely filled.
+
+        Parameters: None
+        Return:
+        True if the board is full, False otherwise
+        """
         if self.find_empty():
             return False
         return True
 
     def find_empty(self):
+        """
+        Find the first empty cell in the board.
+
+        Parameters: None
+        Return:
+        Tuple of (row, column) of the first empty cell
+        False if no empty cells exist
+        """
         for i in range(self.height):
             for j in range(self.width):
                 if self.cells[i][j].value == 0:
@@ -498,7 +654,13 @@ class Board:
         return False
 
     def is_valid(self):
+        """
+        Check if the current board configuration is valid.
 
+        Parameters: None
+        Return:
+        True if the board configuration is valid, False otherwise
+        """
         # Row check
         for i in range(self.height):
             s = set()
@@ -528,11 +690,17 @@ class Board:
         return True
 
     def check_board(self):
+        """
+        Check if the board is both full and valid.
+
+        Parameters: None
+        Return:
+        True if the board is complete and valid, False otherwise
+        """
         if not self.is_full():
             return False
 
         return self.is_valid()
-
 
 
 """

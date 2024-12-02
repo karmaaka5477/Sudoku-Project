@@ -6,7 +6,14 @@ class Button:
         self.rect = rect
         self.hover = False
 
-    def update_hover(self, x, y):
+    
+    def update_hover(self, x: int, y: int):
+        """
+            Updates whether the buttons is being hovered over by the mouse or not
+
+            Parameters:
+            x and y are the mouse coordinates
+        """
         if self.rect.collidepoint(x, y):
             if not self.hover:
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
@@ -17,7 +24,10 @@ class Button:
             self.hover = False
 
 
-def get_buttons(width, height):
+def get_buttons(width: float, height: float):
+    """
+        Sets up buttons (extension of pygame rects) using relative positions and sizes for responsiveness
+    """
 
     BUTTON_WIDTH = 0.135 * width
     BUTTON_HEIGHT = 0.09 * height

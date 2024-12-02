@@ -1,6 +1,5 @@
 from enum import Enum
 
-
 class DifficultyLevel(Enum):
     EASY = 30
     MEDIUM = 40
@@ -8,6 +7,7 @@ class DifficultyLevel(Enum):
 
 
 class Difficulty:
+    # Sets deffault difficulty to easy
     difficulty = DifficultyLevel.EASY
 
     @classmethod
