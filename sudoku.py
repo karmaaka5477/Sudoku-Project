@@ -145,6 +145,7 @@ def game_loop():
 
                 if reset_button.hover:
                     display_board.reset_to_original()
+                    mistakes = 0
 
                 if restart_button.hover:
                     state = 1
